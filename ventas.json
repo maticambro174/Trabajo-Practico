@@ -1,0 +1,42 @@
+[
+    { 
+        "id": "V-0001", 
+        "id_usuario": 2, 
+        "fecha": "2025-09-01", 
+        "total": 189997.00, 
+        "dirección": "Av. Colón 1234, Córdoba", 
+        "productos": [103, 104] 
+    },
+    { 
+        "id": "V-0002", 
+        "id_usuario": 4, 
+        "fecha": "2025-09-02", 
+        "total": 899999.00, 
+        "dirección": "San Martín 567, Córdoba", 
+        "productos": [102] 
+    },
+    { 
+        "id": "V-0003", 
+        "id_usuario": 3, 
+        "fecha": "2025-09-03", 
+        "total": 459999.00, 
+        "dirección": "Ituzaingó 900, Córdoba", 
+        "productos": [101] 
+    },
+    { 
+        "id": "V-0004", 
+        "id_usuario": 5, 
+        "fecha": "2025-09-04", 
+        "total": 219999.00, 
+        "dirección": "Gral. Paz 150, Córdoba", 
+        "productos": [105] 
+    },
+    { 
+        "id": "V-0005", 
+        "id_usuario": 1, 
+        "fecha": "2025-09-04", 
+        "total": 129999.00, 
+        "dirección": "Bv. Illia 230, Córdoba", 
+        "productos": [103] 
+    }
+]
