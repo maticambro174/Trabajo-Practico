@@ -1,0 +1,37 @@
+[
+  {
+    "productoId": 101,
+    "nombre": "Teléfono móvil A52",
+    "descripcion": "Pantalla 6.5 AMOLED, 128GB, 6GB RAM",
+    "precio": 459999,
+    "imagen": "/img/productos/a52.jpg"
+  },
+  {
+    "productoId": 102,
+    "nombre": "Notebook Pro 14",
+    "descripcion": "Intel i5 12ª gen, 16GB RAM, 512GB SSD",
+    "precio": 899999,
+    "imagen": "/img/productos/notebook-pro14.jpg"
+  },
+  {
+    "productoId": 103,
+    "nombre": "Auriculares Inalámbricos X",
+    "descripcion": "Bluetooth 5.3, cancelación de ruido",
+    "precio": 129999,
+    "imagen": "/img/productos/auris-x.jpg"
+  },
+  {
+    "productoId": 104,
+    "nombre": "Reloj inteligente Fit",
+    "descripcion": "Monitoreo cardíaco, GPS, 5ATM",
+    "precio": 99999,
+    "imagen": "/img/productos/smartfit.jpg"
+  },
+  {
+    "productoId": 105,
+    "nombre": "Tablet 10 Lite",
+    "descripcion": "Octa-core, 4GB RAM, 64GB almacenamiento",
+    "precio": 219999,
+    "imagen": "/img/productos/tablet10.jpg"
+  }
+]
