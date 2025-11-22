@@ -50,16 +50,35 @@ router.post('/porProducto', (req, res) => {
     }
 });
 
-router.post('/agregar',(req, res)=>{
-    const {ventaId, id_usuario, fecha, total, direccion, productos}=req.body;
-    if (!ventaId || !id_usuario || !fecha || !total||!direccion||!productos) {
-    return res.status(400).json({ error: 'Faltan datos obligatorios' });
-    }
-    const nuevaVenta={ventaId, id_usuario, fecha, total, direccion, productos};
+router.post('/agregar', (req, res) => {
+  const { id_usuario, fecha, total, direccion, productos } = req.body
 
-    ventasData.push(nuevaVenta)
-  res.status(201).json('Venta agregada correctamente')
+  if (!id_usuario || !fecha || !total || !direccion || !productos) {
+    return res.status(400).json({ error: 'Faltan datos obligatorios' })
+  }
+
+  const nuevoId = ventasData.length
+    ? ventasData[ventasData.length - 1].ventaId + 1
+    : 1
+
+  const nuevaVenta = {
+    ventaId: nuevoId,
+    id_usuario,
+    fecha,
+    total,
+    direccion,
+    productos
+  }
+
+  ventasData.push(nuevaVenta)
+
   writeFile('./data/ventas.json', JSON.stringify(ventasData, null, 2))
+
+  res.status(201).json({
+    status: true,
+    msg: 'Venta agregada correctamente',
+    venta: nuevaVenta
+  })
 })
 
 router.put('/cambiarProductos', (req, res)=>{

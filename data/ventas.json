@@ -50,5 +50,27 @@
       105,
       101
     ]
+  },
+  {
+    "ventaId": 6,
+    "id_usuario": 1,
+    "fecha": "2025-11-22",
+    "total": 319998,
+    "direccion": "dasdasd",
+    "productos": [
+      105,
+      104
+    ]
+  },
+  {
+    "ventaId": 7,
+    "id_usuario": 1,
+    "fecha": "2025-11-22",
+    "total": 319998,
+    "direccion": "fsdfsdf",
+    "productos": [
+      104,
+      105
+    ]
   }
 ]

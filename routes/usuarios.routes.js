@@ -33,7 +33,13 @@ router.post('/inicioSesion', (req, res)=>{
     const resultado=usuariosData.find(e=>e.email==email && e.contraseña==contraseña)
 
     if(resultado){
-        res.status(200).json(`Bienvenido ${resultado.nombre}`)
+        res.status(200).json({
+            status: true,
+            usuarioId: resultado.usuarioId,
+            nombre: resultado.nombre,
+            apellido: resultado.apellido,
+            email: resultado.email
+        })
     }else{
         res.status(400).json(`no se encontro al usuario`)
     }

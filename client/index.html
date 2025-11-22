@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script> <!-- Tailwind -->
+  <title>Document</title>
+</head>
+<body class="bg-slate-900 h-screen flex items-center justify-center">
+
+  <form class="bg-slate-700 flex flex-col items-center justify-center rounded-md shadow-xl shadow-slate-950" id="logInForm">
+    <h3 class="text-xl text-slate-300 mt-2">Inicio de sesion</h3>
+
+    <div class="flex flex-col space-y-5 m-5">
+      <div class="space-y-2 flex flex-col">
+        <label for="mail" class="text-slate-400">Email</label>
+        <input type="text" placeholder="Email" id="mail" class="rounded-md p-2">
+      </div>
+
+      <div class="space-y-2 flex flex-col">
+        <label for="pass" class="text-slate-400">Contraseña</label>
+        <input type="password" placeholder="Contraseña" id="pass" class="rounded-md p-2">
+      </div>
+
+      <p class="text-red-500" id="error"></p>
+      <input type="submit" class="bg-slate-50 rounded-md cursor-pointer p-3 my-3 w-full hover:bg-slate-200" value="Ingresar">
+    </div>
+  </form>
+  <script type="module" src="./login.js"></script>
+</body>
+</html>
