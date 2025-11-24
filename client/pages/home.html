@@ -24,11 +24,6 @@
           <label class="text-slate-400 block mb-1" for="categoryFilter">Categoría</label>
           <select id="categoryFilter" class="w-full rounded-md p-2">
             <option value="todas">Todas</option>
-            <option value="telefonos">Teléfonos</option>
-            <option value="notebooks">Notebooks</option>
-            <option value="audio">Audio</option>
-            <option value="wearables">Wearables</option>
-            <option value="tablets">Tablets</option>
           </select>
         </div>
 
@@ -65,33 +60,38 @@
       </table>
       <p id="productsError" class="text-red-400 mt-2"></p>
     </section>
-
     <section class="bg-slate-800 p-4 rounded-lg shadow space-y-4">
       <h2 class="text-slate-100 text-xl">Carrito</h2>
-      <table class="bg-slate-200 rounded-md table-auto w-full">
-        <thead class="text-slate-700">
-          <tr>
-            <th class="p-2">Producto</th>
-            <th class="p-2">Cantidad</th>
-            <th class="p-2">Precio unitario</th>
-            <th class="p-2">Subtotal</th>
-            <th class="p-2">Acción</th>
-          </tr>
-        </thead>
-        <tbody id="cartTableBody" class="text-center"></tbody>
-      </table>
-      <div class="flex justify-between items-center">
-        <p class="text-slate-100 text-lg">
-          Total: $<span id="cartTotal">0</span>
-        </p>
-        <button id="btnComprar" class="bg-blue-500 hover:bg-blue-600 text-slate-900 font-semibold rounded-md px-6 py-2">
-          Comprar
-        </button>
-      </div>
-      <p id="cartMessage" class="text-slate-200"></p>
-    </section>
-  </div>
-
+        <table class="bg-slate-200 rounded-md table-auto w-full">
+          <thead class="text-slate-700">
+            <tr>
+              <th class="p-2">Producto</th>
+              <th class="p-2">Cantidad</th>
+              <th class="p-2">Precio unitario</th>
+              <th class="p-2">Subtotal</th>
+              <th class="p-2">Acción</th>
+            </tr>
+          </thead>
+          <tbody id="cartTableBody" class="text-center"></tbody>
+        </table>
+        <div class="space-y-1">
+          <label for="direccionEnvio" class="text-slate-100 block">Dirección de envío</label>
+          <input
+            id="direccionEnvio"
+            type="text"
+            class="w-full rounded-md p-2 bg-slate-900 text-slate-100 border border-slate-700 placeholder-slate-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            placeholder="Ej: Av. Siempreviva 742, Córdoba"
+          />
+        </div>
+        <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-3">
+          <p class="text-slate-100 text-lg">Total: $<span id="cartTotal">0</span></p>
+          <button id="btnComprar"class="bg-blue-500 hover:bg-blue-600 text-slate-900 font-semibold rounded-md px-6 py-2 disabled:opacity-50 disabled:cursor-not-allowed">
+            Comprar
+          </button>
+        </div>
+        <p id="cartMessage" class="text-slate-200"></p>
+      </section>
+    </div>
   <script type="module" src="./home.controller.js"></script>
 </body>
 </html>

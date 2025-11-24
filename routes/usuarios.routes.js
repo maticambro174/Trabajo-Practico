@@ -1,18 +1,36 @@
 import {Router} from "express";
-import {readFile, writeFile} from 'fs/promises'
 import { obtenerUsuarioPorId } from "../utils/usuario.js";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import{crearUsuario, encontrarTodos, encontrarPorEmail} from "../db/actions/usuarios.actions.js"
 
-const fileUsuarios=await readFile('./data/usuarios.json', 'utf-8')
-const usuariosData=JSON.parse(fileUsuarios)
 const router=Router()
 
-router.get('/todo', (req, res) => {
-    if (usuariosData.length) {
-        res.status(200).json(usuariosData)
-    } else {
-        res.status(400).json("No hay usuarios para mostrar")
-    }
+const SECRET = "_AQPsssHV56kF07ImQL9DPEj5UzCYuLG8BbSAmedv74gLPueV9abm51Ca18rIGJC";
+
+
+router.get('/todos', async(req, res) => {
+    try {
+            const resultado=await encontrarTodos();
+            console.log(resultado);
+            
+            res.status(200).json(resultado);
+        } catch (error) {
+            res.status(400).json();
+        }
 })
+
+router.post('/crear', async(req, res) => {
+  const {nombre, apellido, email, contraseña} = req.body;  
+    try {
+        const resultado= await crearUsuario({nombre, apellido, email, contraseña})
+        console.log(resultado);
+        resultado.status=true;
+        res.status(200).json(resultado);
+    } catch (error) {
+        res.status(400).json({status: false});
+    }
+});
 
 router.get('/porId/:usuarioId', (req, res)=>{
     const id=parseInt(req.params.usuarioId)
@@ -26,67 +44,40 @@ router.get('/porId/:usuarioId', (req, res)=>{
 })
 
 
-router.post('/inicioSesion', (req, res)=>{
-    const email=req.body.email
-    const contraseña=req.body.contraseña
+router.post('/inicioSesion', async (req, res) => {
+  const { email, contraseña } = req.body;
 
-    const resultado=usuariosData.find(e=>e.email==email && e.contraseña==contraseña)
+  try {
+    const resultado = await encontrarPorEmail(email);
 
-    if(resultado){
-        res.status(200).json({
-            status: true,
-            usuarioId: resultado.usuarioId,
-            nombre: resultado.nombre,
-            apellido: resultado.apellido,
-            email: resultado.email
-        })
-    }else{
-        res.status(400).json(`no se encontro al usuario`)
+    if (!resultado) {
+      return res.status(404).json({ status: false, message: "Usuario no encontrado" });
     }
-})
 
-router.post('/agregar',(req, res)=>{
-    const {usuarioId, nombre, apellido, email, contraseña}=req.body;
-    if (!usuarioId || !nombre || !apellido || !email ||!contraseña) {
-    return res.status(400).json({ error: 'Faltan datos obligatorios' });
+    const controlPass = bcrypt.compareSync(contraseña, resultado.contraseña);
+    if (!controlPass) {
+      return res.status(401).json({ status: false, message: "Contraseña incorrecta" });
     }
-    const nuevoUsuario={usuarioId, nombre, apellido, email, contraseña};
 
-    usuariosData.push(nuevoUsuario)
-    res.status(201).json('Usuario agregado correctamente')
-    writeFile('./data/usuarios.json', JSON.stringify(usuariosData, null, 2))
-})
+    const payload = {
+      usuarioId: resultado._id,
+      nombre: resultado.nombre,
+      apellido: resultado.apellido,
+      email: resultado.email
+    };
 
-router.put('/cambiarContrasena', (req, res)=>{
-    const id=req.body.usuarioId
-    const nuevaContrasena=req.body.nuevaContrasena
+    const token = jwt.sign(payload, SECRET, { expiresIn: 86400 });
 
-    try{
-        const index=usuariosData.findIndex(e=>e.usuarioId==id)
-        usuariosData[index].contraseña=nuevaContrasena
-        res.status(201).json('contraseña modificada correctamente')
-        writeFile('./data/usuarios.json', JSON.stringify(usuariosData, null, 2))
+    return res.status(200).json({
+      status: true,
+      token,
+      user: payload
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ status: false, message: "Error interno" });
+  }
+});
 
-    }catch(error){
-        res.send(500).json("Error al actualizar la contraseña")
-    }
-})
-
-
-router.delete('/eliminar/:usuarioId', (req, res)=>{
-    try{
-        const id=parseInt(req.params.usuarioId);
-        const index = usuariosData.findIndex(p => p.usuarioId === id);
-        if (index === -1) {
-            return res.status(404).json(`No se encontró usuario con ID ${id}` );
-        }
-        usuariosData.splice(index, 1);
-        res.status(200).json('Producto eliminado correctamente')
-        writeFile('./data/usuarios.json', JSON.stringify(usuariosData, null, 2))
-
-    }catch(error){
-        res.status(500).json({ error: 'Error al eliminar al usuario' });
-    }
-})
 
 export default router

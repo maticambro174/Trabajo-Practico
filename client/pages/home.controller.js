@@ -1,9 +1,13 @@
-const PRODUCT_API = 'http://localhost:3000/productos'
-const VENTAS_API = 'http://localhost:3000/ventas'  // o 3001 según tu server
+import {API} from "../api.js"
+
+const PRODUCTOS_API = `${API}/productos`  
+const VENTAS_API = `${API}/ventas`
+const CATEGORIAS_API= `${API}/categorias`
 
 const user = JSON.parse(sessionStorage.getItem('user') || 'null')
+const token = sessionStorage.getItem('token') || null
 
-// Elementos del DOM
+
 const userNameSpan = document.getElementById('userName')
 const productTableBody = document.getElementById('productTableBody')
 const productsError = document.getElementById('productsError')
@@ -17,6 +21,7 @@ const cartTableBody = document.getElementById('cartTableBody')
 const cartTotalSpan = document.getElementById('cartTotal')
 const btnComprar = document.getElementById('btnComprar')
 const cartMessage = document.getElementById('cartMessage')
+const direccionInput = document.getElementById('direccionEnvio')
 
 let productos = []
 let carrito = JSON.parse(localStorage.getItem('carrito') || '[]')
@@ -27,7 +32,7 @@ if (user && user.nombre) {
 
 const cargarProductos = async () => {
   try {
-    const res = await fetch(`${PRODUCT_API}/todo`)
+    const res = await fetch(`${PRODUCTOS_API}/todos`)
     if (!res.ok) {
       const text = await res.text()
       console.error('Error al cargar productos', res.status, text)
@@ -41,6 +46,30 @@ const cargarProductos = async () => {
     productsError.textContent = 'Error de conexión con el servidor'
   }
 }
+
+const cargarCategorias = async () => {
+  try {
+    const res = await fetch(`${CATEGORIAS_API}/todos`)
+    if (!res.ok) {
+      console.error('Error al cargar categorías', res.status)
+      return
+    }
+
+    const categorias = await res.json()
+
+    categoryFilter.innerHTML = '<option value="todas">Todas</option>'
+
+    categorias.forEach((c) => {
+      const opt = document.createElement('option')
+      opt.value = c._id
+      opt.textContent = c.nombre
+      categoryFilter.appendChild(opt)
+    })
+  } catch (err) {
+    console.error('Error de conexión al cargar categorías', err)
+  }
+}
+
 
 const renderProductos = (lista) => {
   productTableBody.innerHTML = ''
@@ -62,7 +91,7 @@ const renderProductos = (lista) => {
       <td class="p-2">
         <button 
           class="bg-green-500 hover:bg-green-600 text-slate-900 font-semibold rounded-md px-3 py-1"
-          data-id="${p.productoId}"
+          data-id="${p._id}"
           name="btnAddToCart"
         >
           Agregar al carrito
@@ -83,7 +112,7 @@ const aplicarFiltros = () => {
 
   if (categoriaSeleccionada !== 'todas') {
     lista = lista.filter(
-      (p) => (p.categoria || '').toLowerCase() === categoriaSeleccionada
+      (p) => String(p.categoria) === categoriaSeleccionada
     )
   }
 
@@ -119,8 +148,18 @@ const renderCarrito = () => {
       </tr>
     `
     cartTotalSpan.textContent = '0'
+
+    if (direccionInput) {
+      direccionInput.value = ''
+      direccionInput.disabled = true
+    }
+    btnComprar.disabled = true
     return
   }
+  if (direccionInput) {
+    direccionInput.disabled = false
+  }
+  btnComprar.disabled = false
 
   let total = 0
 
@@ -151,7 +190,7 @@ const renderCarrito = () => {
 }
 
 const agregarAlCarrito = (productoId) => {
-  const producto = productos.find((p) => p.productoId === productoId)
+  const producto = productos.find((p) => p._id === productoId)
   if (!producto) return
 
   const index = carrito.findIndex((item) => item.productoId === productoId)
@@ -160,7 +199,7 @@ const agregarAlCarrito = (productoId) => {
     carrito[index].cantidad += 1
   } else {
     carrito.push({
-      productoId: producto.productoId,
+      productoId: producto._id,
       nombre: producto.nombre,
       precio: producto.precio,
       cantidad: 1
@@ -172,13 +211,26 @@ const agregarAlCarrito = (productoId) => {
 }
 
 const comprar = async () => {
+  cartMessage.textContent = ''
+
+  if (!user || !user.usuarioId) {
+    cartMessage.textContent = 'No hay usuario en sesión'
+    return
+  }
+
+  if (!token) {
+    cartMessage.textContent = 'No se encontró el token. Inicie sesión nuevamente.'
+    return
+  }
+
   if (!carrito.length) {
     cartMessage.textContent = 'El carrito está vacío'
     return
   }
 
-  if (!user || !user.usuarioId) {
-    cartMessage.textContent = 'No hay usuario en sesión'
+  const direccion = direccionInput.value.trim()
+  if (!direccion) {
+    cartMessage.textContent = 'Ingrese una dirección de envío'
     return
   }
 
@@ -187,48 +239,44 @@ const comprar = async () => {
     0
   )
 
-  const direccion = prompt('Ingrese la dirección de envío:')
-
-  if (!direccion) {
-    cartMessage.textContent = 'Debe ingresar una dirección'
-    return
-  }
-
   const body = {
-    id_usuario: user.usuarioId,
-    fecha: new Date().toISOString().slice(0, 10),
-    total,
     direccion,
+    total,
     productos: carrito.map((item) => item.productoId)
   }
 
   try {
-    const res = await fetch(`${VENTAS_API}/agregar`, {
+    const res = await fetch(`${VENTAS_API}/crear`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
       },
       body: JSON.stringify(body)
     })
 
     const data = await res.json()
 
-    if (res.ok && data.status) {
-      cartMessage.textContent = `Compra realizada. N° de venta: ${data.venta.ventaId}`
-      carrito = []
-      guardarCarrito()
-      renderCarrito()
-    } else {
-      cartMessage.textContent = data.msg || 'Error al procesar la compra'
+    if (!res.ok || !data.status) {
+      console.error('Error al comprar', res.status, data)
+      cartMessage.textContent = data.message || 'Error al procesar la compra'
+      return
     }
+
+    cartMessage.textContent = 'Compra realizada correctamente'
+    carrito = []
+    guardarCarrito()
+    renderCarrito()
   } catch (err) {
     console.error(err)
-    cartMessage.textContent = 'Error de conexión al enviar la compra'
+    cartMessage.textContent = 'Error de conexión al procesar la compra'
   }
 }
 
+
 window.addEventListener('DOMContentLoaded', () => {
   cargarProductos()
+  cargarCategorias()
   renderCarrito()
 })
 
@@ -239,7 +287,7 @@ btnAplicarFiltros.addEventListener('click', (e) => {
 
 productTableBody.addEventListener('click', (e) => {
   if (e.target.name === 'btnAddToCart') {
-    const id = Number(e.target.dataset.id)
+    const id = e.target.dataset.id
     agregarAlCarrito(id)
   }
 })

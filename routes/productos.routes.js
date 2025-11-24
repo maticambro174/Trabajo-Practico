@@ -1,18 +1,31 @@
 import {Router} from "express";
-import {readFile, writeFile} from 'fs/promises'
+import { crearProducto, encontrarTodos } from "../db/actions/productos.actions.js";
 
 
-const fileProductos=await readFile('./data/productos.json', 'utf-8')
-const productosData=JSON.parse(fileProductos)
 const router=Router()
 
-router.get('/todo', (req, res) => {
-    if (productosData.length) {
-        res.status(200).json(productosData)
-    } else {
-        res.status(400).json("No hay productos para mostrar")
+router.get('/todos', async(req, res) => {
+    try {
+        const resultado=await encontrarTodos();
+        console.log(resultado);
+        
+        res.status(200).json(resultado);
+    } catch (error) {
+        res.status(400).json();
     }
 })
+
+router.post('/crear', async(req, res) => {
+    const {nombre, descripcion, precio, stock, categoria } = req.body;  
+    try {
+        const resultado= await crearProducto({nombre, descripcion, precio, stock, categoria })
+        console.log(resultado);
+        resultado.status=true;
+        res.status(200).json(resultado);
+    } catch (error) {
+        res.status(400).json({status: false});
+    }
+});
 
 router.get('/porId/:productoId', (req, res)=>{
     const id=parseInt(req.params.productoId)
@@ -52,18 +65,7 @@ router.post('/porPrecio', (req, res) => {
     }
 });
 
-router.post('/agregar',(req, res)=>{
-    const {productoId, nombre, descripcion, precio, imagen}=req.body;
-    if (!productoId || !nombre || !descripcion || !precio) {
-    return res.status(400).json({ error: 'Faltan datos obligatorios' });
 
-    }
-    const nuevoProducto={productoId, nombre, descripcion, precio, imagen};
-
-    productosData.push(nuevoProducto)
-  res.status(201).json('Producto agregado correctamente')
-  writeFile('./data/productos.json', JSON.stringify(productosData, null, 2))
-})
 
 router.put('/cambiarPrecio', (req, res)=>{
     const id=req.body.productoId
@@ -73,7 +75,6 @@ router.put('/cambiarPrecio', (req, res)=>{
         const index=productosData.findIndex(e=>e.productoId==id)
         productosData[index].precio=nuevoPrecio
         res.status(201).json('Producto modificado correctamente')
-        writeFile('./data/productos.json', JSON.stringify(productosData, null, 2))
 
     }catch(error){
         res.send(500).json("Error al actualizar el producto")
@@ -89,7 +90,6 @@ router.delete('/eliminar/:productoId', (req, res)=>{
         }
         productosData.splice(index, 1);
         res.status(200).json('Producto eliminado correctamente')
-        writeFile('./data/productos.json', JSON.stringify(productosData, null, 2))
     }catch(error){
         res.status(500).json({ error: 'Error al eliminar el producto' });
     }

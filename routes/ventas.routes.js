@@ -1,18 +1,67 @@
 import {Router} from "express";
-import {readFile, writeFile} from 'fs/promises'
+import { encontrarTodos, crearVenta } from "../db/actions/ventas.actions.js";
+import { verifyToken, decodeToken } from "../utils/middleware.js";
 
-
-const fileVentas=await readFile('./data/ventas.json', 'utf-8')
-const ventasData=JSON.parse(fileVentas)
 const router=Router()
 
-router.get('/todo', (req, res) => {
-    if (ventasData.length) {
-        res.status(200).json(ventasData)
-    } else {
-        res.status(400).json("No hay ventas para mostrar")
-    }
-})
+const authMiddleware = async (req, res, next) => {
+  const authHeader = req.headers.authorization || "";
+  const token = authHeader.split(" ")[1];
+
+  const isValid = await verifyToken(token);
+  if (!isValid) {
+    return res.status(401).json({
+      status: false,
+      message: "Token inválido o ausente",
+    });
+  }
+
+  const payload = decodeToken(token);
+  if (!payload) {
+    return res.status(401).json({
+      status: false,
+      message: "No se pudo decodificar el token",
+    });
+  }
+
+  req.user = payload;
+  next();
+};
+
+router.get("/todos", authMiddleware, async (req, res) => {
+  try {
+    const resultado = await encontrarTodos();
+    res.status(200).json(resultado);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ status: false, message: "Error al obtener ventas" });
+  }
+});
+
+router.post("/crear", authMiddleware, async (req, res) => {
+  const usuario = req.user.usuarioId;
+  const { productos, direccion, total } = req.body;
+
+  if (!productos || !productos.length) {
+    return res
+      .status(400)
+      .json({ status: false, message: "No se enviaron productos" });
+  }
+
+  try {
+    const result = await crearVenta({ productos, direccion, total, usuario });
+    res.status(201).json({
+      status: true,
+      message: "Venta creada correctamente",
+      venta: result,
+    });
+  } catch (error) {
+    console.log(error);
+    res
+      .status(500)
+      .json({ status: false, message: "Error al crear la venta" });
+  }
+});
 
 router.get('/porId/:ventaId', (req, res)=>{
     const id=parseInt(req.params.ventaId)
@@ -50,66 +99,6 @@ router.post('/porProducto', (req, res) => {
     }
 });
 
-router.post('/agregar', (req, res) => {
-  const { id_usuario, fecha, total, direccion, productos } = req.body
-
-  if (!id_usuario || !fecha || !total || !direccion || !productos) {
-    return res.status(400).json({ error: 'Faltan datos obligatorios' })
-  }
-
-  const nuevoId = ventasData.length
-    ? ventasData[ventasData.length - 1].ventaId + 1
-    : 1
-
-  const nuevaVenta = {
-    ventaId: nuevoId,
-    id_usuario,
-    fecha,
-    total,
-    direccion,
-    productos
-  }
-
-  ventasData.push(nuevaVenta)
-
-  writeFile('./data/ventas.json', JSON.stringify(ventasData, null, 2))
-
-  res.status(201).json({
-    status: true,
-    msg: 'Venta agregada correctamente',
-    venta: nuevaVenta
-  })
-})
-
-router.put('/cambiarProductos', (req, res)=>{
-    const id=req.body.ventaId
-    const nuevosProductos=req.body.nuevosProductos
-
-    try{
-        const index=ventasData.findIndex(e=>e.ventaId==id)
-        ventasData[index].productos=nuevosProductos
-        res.status(201).json('venta modificada correctamente')
-        writeFile('./data/ventas.json', JSON.stringify(ventasData, null, 2))
-
-    }catch(error){
-        res.send(500).json("Error al actualizar la venta")
-    }
-})
-
-router.delete('/eliminar/:ventaId', (req, res)=>{
-    try{
-        const id=parseInt(req.params.ventaId);
-        const index = ventasData.findIndex(v => v.ventaId === id);
-        if (index === -1) {
-            return res.status(404).json(`No se encontró ventas con ID ${id}` );
-        }
-        ventasData.splice(index, 1);
-        res.status(200).json('Producto eliminado correctamente')
-        writeFile('./data/ventas.json', JSON.stringify(ventasData, null, 2))
-    }catch(error){
-        res.status(500).json({ error: 'Error al eliminar la venta' });
-    }
-})
 
 export default router
 
